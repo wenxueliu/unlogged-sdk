@@ -1462,4 +1462,32 @@ public class AgentCommandExecutorImpl implements AgentCommandExecutor {
             trySpringIntegration(testClass);
         }
     }
+
+    @Override
+    public AgentCommandResponse injectTrace(AgentCommandRequest agentCommandRequest) throws Exception {
+        return null;
+    }
+
+    @Override
+    public AgentCommandResponse removeTrace(AgentCommandRequest agentCommandRequest) throws Exception {
+        return null;
+    }
+
+    @Override
+    public AgentCommandResponse registerClass(AgentCommandRequest agentCommandRequest) throws Exception {
+        String classWeaveInfoData = agentCommandRequest.getMethodParameters().get(0);
+        String probesToRecord = agentCommandRequest.getMethodParameters().get(1);
+        Runtime.registerClass(classWeaveInfoData, probesToRecord);
+        AgentCommandResponse commandResponse = new AgentCommandResponse();
+        commandResponse.setResponseType(ResponseType.NORMAL);
+        return commandResponse;
+    }
+
+    @Override
+    public AgentCommandResponse notSupport(AgentCommandRequest agentCommandRequest) throws Exception {
+        AgentCommandResponse commandResponse = new AgentCommandResponse();
+        commandResponse.setMessage("unknown command: " + agentCommandRequest.getCommand());
+        commandResponse.setResponseType(ResponseType.FAILED);
+        return commandResponse;
+    }
 }

@@ -8,10 +8,8 @@ import io.unlogged.mocking.DeclaredMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,10 +56,14 @@ public class AtomicRecordService {
     }
 
 
+    private String getRootDirPath() {
+        return TEST_RESOURCES_PATH + UNLOGGED_RESOURCE_FOLDER_NAME;
+    }
+
     private List<File> getFilesInUnloggedFolder() {
         ArrayList<File> returnFileList = new ArrayList<>();
 
-        File rootDir = new File(TEST_RESOURCES_PATH + UNLOGGED_RESOURCE_FOLDER_NAME);
+        File rootDir = new File(getRootDirPath());
         File[] files = rootDir.listFiles();
         if (files != null) {
             Collections.addAll(returnFileList, files);
@@ -189,6 +191,93 @@ public class AtomicRecordService {
             return null;
         }
         return classAtomicRecordMap.get(fullyClassifiedClassName).getStoredCandidateMap();
+    }
+
+    public void saveCandidate(MethodUnderTest methodUnderTest, StoredCandidate candidate) {
+        try {
+            AtomicRecord existingRecord = null;
+            AtomicRecord atomicRecord = classAtomicRecordMap.get(methodUnderTest.getClassName());
+            String methodKey = methodUnderTest.getMethodHashKey();
+            if (atomicRecord == null) {
+                //create record
+                logger.info("[ATRS] No Atomic record found for this class, " +
+                        "creating a new atomic record");
+                addNewRecord(methodKey, methodUnderTest.getClassName(), candidate);
+            } else {
+                //read as array of AtomicRecords
+                logger.info("[ATRS] creating a new record");
+                boolean foundMethod = false;
+                boolean foundCandidate = false;
+
+                if (atomicRecord.getStoredCandidateMap().get(methodKey) != null) {
+                    foundMethod = true;
+                    existingRecord = atomicRecord;
+                    List<StoredCandidate> candidates = atomicRecord.getStoredCandidateMap().get(methodKey);
+                    for (StoredCandidate storedCandidate : candidates) {
+                        if (
+                                (candidate.getCandidateId() != null && candidate.getCandidateId()
+                                        .equals(storedCandidate.getCandidateId()))
+                                        || storedCandidate.getMethodArguments().equals(candidate.getMethodArguments())
+                        ) {
+                            foundCandidate = true;
+                            logger.info("[ATRS] Replacing existing record");
+                            storedCandidate.copyFrom(candidate);
+                            break;
+                        }
+                    }
+                }
+                if (!foundMethod) {
+                    logger.info("[ATRS] Adding new map entry");
+                    List<StoredCandidate> candidates = new ArrayList<>();
+                    candidates.add(candidate);
+                    atomicRecord.getStoredCandidateMap().put(methodKey, candidates);
+                    writeToFile(new File(getFilenameForClass(methodUnderTest.getClassName())),
+                            atomicRecord, FileUpdateType.UPDATE_CANDIDATE);
+                } else if (!foundCandidate) {
+                    //add to stored candidates
+                    logger.info("[ATRS] Adding Candidate");
+                    existingRecord.getStoredCandidateMap().get(methodKey).add(candidate);
+                    existingRecord.setStoredCandidateMap(filterCandidates(existingRecord.getStoredCandidateMap()));
+                    writeToFile(new File(getFilenameForClass(methodUnderTest.getClassName())),
+                            atomicRecord, FileUpdateType.UPDATE_CANDIDATE);
+                } else {
+                    logger.info("[ATRS] Replacing existing record (found)");
+                    existingRecord.setStoredCandidateMap(filterCandidates(existingRecord.getStoredCandidateMap()));
+                    writeToFile(new File(getFilenameForClass(methodUnderTest.getClassName())),
+                            atomicRecord, FileUpdateType.UPDATE_CANDIDATE);
+                }
+            }
+        } catch (Exception e) {
+            logger.info("Exception adding candidate : " + e);
+        }
+    }
+
+    private void addNewRecord(String methodHashKey, String className, StoredCandidate candidate) {
+        AtomicRecord record = new AtomicRecord(className);
+        ArrayList<StoredCandidate> value = new ArrayList<>();
+        value.add(candidate);
+        record.getStoredCandidateMap().put(methodHashKey, value);
+        classAtomicRecordMap.put(className, record);
+        writeToFile(new File(getFilenameForClass(className)), record, FileUpdateType.ADD_CANDIDATE);
+    }
+
+    private String getFilenameForClass(String classname) {
+        String destinationFileName = separator + classname + ".json";
+        return getRootDirPath() + destinationFileName;
+    }
+
+    private void writeToFile(File file, AtomicRecord atomicRecord, FileUpdateType fileUpdateType) {
+        File parentDir = file.getParentFile();
+        if (!parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+        try (FileOutputStream resourceFile = new FileOutputStream(file)) {
+            String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(atomicRecord);
+            resourceFile.write(json.getBytes(StandardCharsets.UTF_8));
+            resourceFile.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public enum FileUpdateType {

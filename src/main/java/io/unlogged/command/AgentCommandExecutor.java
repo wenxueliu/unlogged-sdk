@@ -10,4 +10,12 @@ public interface AgentCommandExecutor {
     AgentCommandResponse injectMocks(AgentCommandRequest agentCommandRequest) throws Exception;
 
     AgentCommandResponse removeMocks(AgentCommandRequest agentCommandRequest) throws Exception;
+
+    AgentCommandResponse injectTrace(AgentCommandRequest agentCommandRequest) throws Exception;
+
+    AgentCommandResponse removeTrace(AgentCommandRequest agentCommandRequest) throws Exception;
+
+    AgentCommandResponse registerClass(AgentCommandRequest agentCommandRequest) throws Exception;
+
+    AgentCommandResponse notSupport(AgentCommandRequest agentCommandRequest) throws Exception;
 }
