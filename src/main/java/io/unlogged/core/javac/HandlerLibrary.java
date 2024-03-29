@@ -26,7 +26,7 @@ import com.insidious.common.weaver.DataInfo;
 import com.insidious.common.weaver.EventType;
 import com.insidious.common.weaver.MethodInfo;
 import com.sun.source.util.Trees;
-import com.sun.tools.javac.code.ClassFinder;
+//import com.sun.tools.javac.code.ClassFinder;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCAnnotation;
@@ -73,7 +73,7 @@ public class HandlerLibrary {
 
     /**
      * Creates a new HandlerLibrary that will report any problems or errors to the provided messager.
-     * You probably want to use {@link #load(Messager, Trees, ClassFinder)} instead.
+     * You probably want to use { #load(Messager, Trees, ClassFinder)} instead.
      */
     public HandlerLibrary(Messager messager, Trees trees, Context context) {
         ConfigurationKeysLoader.LoaderLoader.loadAllConfigurationKeys();

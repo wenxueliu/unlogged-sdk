@@ -22,7 +22,6 @@
 package io.unlogged.core.javac;
 
 import com.sun.source.util.Trees;
-import com.sun.tools.javac.code.ClassFinder;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.*;
 import com.sun.tools.javac.util.Context;

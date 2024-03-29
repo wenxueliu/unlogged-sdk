@@ -1,7 +1,7 @@
 package io.unlogged.weaver;
 
 
-import com.sun.tools.javac.code.ClassFinder;
+//import com.sun.tools.javac.code.ClassFinder;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
@@ -10,6 +10,7 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 
+import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -22,14 +23,14 @@ public class TypeHierarchy {
     private final Names names;
     private final Symtab symtab;
     private Method loadClassMethod = null;
-    private ClassFinder classFinder;
+//    private ClassFinder classFinder;
     private ClassReader classReader;
     private boolean jvm18 = false;
 
     public TypeHierarchy(Context context) {
         try {
             Class.forName("com.sun.tools.javac.code.ClassFinder");
-            this.classFinder = ClassFinder.instance(context);
+//            this.classFinder = ClassFinder.instance(context);
         } catch (Exception e) {
             // jvm 1.8
             this.classReader = ClassReader.instance(context);
@@ -180,7 +181,8 @@ public class TypeHierarchy {
             }
 //            return classReader.loadClass(names.fromString(type1));
         }
-        return classFinder.loadClass(symtab.unnamedModule, names.fromString(type1));
+        throw new UnsupportedOperationException("only jvm18 support");
+//        return classFinder.loadClass(symtab.unnamedModule, names.fromString(type1));
     }
 
     private boolean typeImplements(String theType, Symbol.ClassSymbol theReader, String theInterface) throws IOException {
